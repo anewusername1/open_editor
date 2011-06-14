@@ -1,0 +1,11 @@
+#!/bin/bash
+
+PLUGIN_DIRECTORY = "~/.irb_plugins"
+
+if [ -d "$PLUGIN_DIRECTORY" ]
+	
+fi
+
+function copy_editor {
+  
+}
