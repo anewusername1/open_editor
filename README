@@ -1,15 +1,15 @@
 This will allow you to edit code in vim, textmate, sublime, or mvim. Once you've created some code, close the editor to have it run for you.
 This works in IRB as well as Rails console
 
-Running bin/install will create the following files/folders:
+Running rake install will create the following files/folders:
 ~/.irb_plugins
-~/.irb_plugins/interactive_editing.rb
+~/.irb_plugins/open_editor.rb
 
 and will edit/create your ~/.irbrc file to require that plugin
 
 To uninstall:
-rm ~/.irb_plugins/interactive_editing.rb
+rm ~/.irb_plugins/open_editor.rb
 rmdir ~/.irb_plugins
 
 Remove the following line from your ~/.irbrc
-require '~/.irb_plugins/interactive_editing.rb'
+require '~/.irb_plugins/open_editor.rb'

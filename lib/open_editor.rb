@@ -1,6 +1,8 @@
-# Giles Bowkett, Greg Brown, and several audience members from Giles' Ruby East presentation.
 require 'tempfile'
-class InteractiveEditor
+# TODO: look for a .openeditorrc file and parse it. Look for places to put the
+# temp files besides the default (which will be /tmp)
+# TODO: make the default temp file directory /tmp
+class OpenEditor
   DEBIAN_SENSIBLE_EDITOR = '/usr/bin/sensible-editor'
   MACOSX_OPEN_CMD = 'open'
   XDG_OPEN = '/usr/bin/xdg-open'
@@ -10,12 +12,8 @@ class InteractiveEditor
     return ENV['EDITOR'] if ENV['EDITOR']
     return MACOSX_OPEN_CMD if Platform::IMPL == :macosx
     if Platform::IMPL == :linux
-      if File.executable?(XDG_OPEN)
-        return XDG_OPEN
-      end
-      if File.executable?(DEBIAN_SENSIBLE_EDITOR)
-        return DEBIAN_SENSIBLE_EDITOR
-      end
+      return XDG_OPEN               if File.executable?(XDG_OPEN)
+      return DEBIAN_SENSIBLE_EDITOR if File.executable?(DEBIAN_SENSIBLE_EDITOR)
     end
     raise 'Could not determine what editor to use. Please specify.'
   end
@@ -35,7 +33,7 @@ class InteractiveEditor
     end
   end
 
-  def edit_interactively
+  def open_editor
     unless @file
       @file = Tempfile.new('irb_tempfile')
     end
@@ -52,13 +50,13 @@ class InteractiveEditor
   end
 end
 
-module InteractiveEditing
-  def edit_interactively(editor = InteractiveEditor.sensible_editor)
-    unless IRB.conf[:interactive_editors] && IRB.conf[:interactive_editors][editor]
-      IRB.conf[:interactive_editors] ||= {}
-      IRB.conf[:interactive_editors][editor] = InteractiveEditor.new(editor)
+module IRBExtension
+  def open_editor(editor = OpenEditor.sensible_editor)
+    unless IRB.conf[:open_editors] && IRB.conf[:open_editors][editor]
+      IRB.conf[:open_editors] ||= {}
+      IRB.conf[:open_editors][editor] = OpenEditor.new(editor)
     end
-    IRB.conf[:interactive_editors][editor].edit_interactively
+    IRB.conf[:open_editors][editor].open_editor
   end
 
   def handling_jruby_bug(&block)
@@ -72,31 +70,31 @@ module InteractiveEditing
   end
 
   def vi
-    handling_jruby_bug {edit_interactively(:vim)}
+    handling_jruby_bug {open_editor(:vim)}
   end
 
   def mvim
-    handling_jruby_bug {edit_interactively(:mvim)}
+    handling_jruby_bug {open_editor(:mvim)}
   end
 
   def subl
-    handling_jruby_bug {edit_interactively(:subl)}
+    handling_jruby_bug {open_editor(:subl)}
   end
 
   def mate
-    edit_interactively(:mate)
+    open_editor(:mate)
   end
 
   # TODO: Hardcore Emacs users use emacsclient or gnuclient to open documents in
   # their existing sessions, rather than starting a brand new Emacs process.
   def emacs
-    handling_jruby_bug {edit_interactively(:emacs)}
+    handling_jruby_bug {open_editor(:emacs)}
   end
 end
 
 # Since we only intend to use this from the IRB command line, I see no reason to
 # extend the entire Object class with this module when we can just extend the
 # IRB main object.
-self.extend InteractiveEditing if Object.const_defined? :IRB
+self.extend IRBExtension if Object.const_defined? :IRB
 
 
